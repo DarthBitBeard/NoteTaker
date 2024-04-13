@@ -1,18 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
+  console.log("Document ready"); // Should appear in the console when the document is ready
+
+document.addEventListener('DOMContentLoaded', function() {
   let noteForm = document.querySelector('.note-form');
   let noteTitle = document.querySelector('.note-title');
   let noteText = document.querySelector('.note-textarea');
   let saveNoteBtn = document.querySelector('.save-note');
   let newNoteBtn = document.querySelector('.new-note');
   let clearBtn = document.querySelector('.clear-btn');
-  let noteList = document.querySelectorAll('.list-container .list-group');
+  let noteList = document.querySelector('.list-group'); // Ensure this selector matches your HTML
 
-  // Show an element
   const show = (elem) => {
       elem.style.display = 'inline';
   };
 
-  // Hide an element
   const hide = (elem) => {
       elem.style.display = 'none';
   };
@@ -54,19 +55,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const renderActiveNote = () => {
       hide(saveNoteBtn);
       hide(clearBtn);
-
       if (activeNote.id) {
-          show(newNoteBtn);
           noteTitle.setAttribute('readonly', true);
           noteText.setAttribute('readonly', true);
           noteTitle.value = activeNote.title;
           noteText.value = activeNote.text;
+          show(newNoteBtn);
       } else {
-          hide(newNoteBtn);
           noteTitle.removeAttribute('readonly');
           noteText.removeAttribute('readonly');
           noteTitle.value = '';
           noteText.value = '';
+          hide(newNoteBtn);
       }
   };
 
@@ -83,14 +83,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const handleNoteDelete = (e) => {
       e.stopPropagation();
-
-      const note = e.target;
-      const noteId = JSON.parse(note.parentElement.getAttribute('data-note')).id;
-
+      const noteId = JSON.parse(e.target.parentElement.getAttribute('data-note')).id;
       if (activeNote.id === noteId) {
           activeNote = {};
       }
-
       deleteNote(noteId).then(() => {
           getAndRenderNotes();
           renderActiveNote();
@@ -98,78 +94,65 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   const handleNoteView = (e) => {
-      e.preventDefault();
-      activeNote = JSON.parse(e.target.parentElement.getAttribute('data-note'));
-      renderActiveNote();
+      const noteId = JSON.parse(e.target.closest('li').getAttribute('data-note')).id;
+      const note = noteListItems.find(n => n.id === noteId);
+      if (note) {
+          activeNote = note;
+          renderActiveNote();
+      }
   };
 
   const handleNewNoteView = () => {
       activeNote = {};
-      show(clearBtn);
       renderActiveNote();
   };
 
-  const handleRenderBtns = () => {
-      if (!noteTitle.value.trim() && !noteText.value.trim()) {
-          hide(clearBtn);
-      } else {
-          show(clearBtn);
-          if (!noteTitle.value.trim() || !noteText.value.trim()) {
-              hide(saveNoteBtn);
-          } else {
-              show(saveNoteBtn);
-          }
-      }
-  };
-
-  const renderNoteList = async (notes) => {
-      let jsonNotes = await notes;
-      noteList.forEach((el) => (el.innerHTML = ''));
-
-      let noteListItems = [];
-
-      const createLi = (text, delBtn = true) => {
-          const liEl = document.createElement('li');
-          liEl.classList.add('list-group-item');
-
-          const spanEl = document.createElement('span');
-          spanEl.classList.add('list-item-title');
-          spanEl.innerText = text;
-          spanEl.addEventListener('click', handleNoteView);
-
-          liEl.append(spanEl);
-
-          if (delBtn) {
-              const delBtnEl = document.createElement('i');
-              delBtnEl.classList.add('fas', 'fa-trash-alt', 'float-right', 'text-danger', 'delete-note');
-              delBtnEl.addEventListener('click', handleNoteDelete);
-
-              liEl.append(delBtnEl);
-          }
-
-          return liEl;
-      };
-
-      if (jsonNotes.length === 0) {
-          noteListItems.push(createLi('No saved Notes', false));
-      }
-
-      jsonNotes.forEach((note) => {
-          const li = createLi(note.title);
-          li.dataset.note = JSON.stringify(note);
-
-          noteListItems.push(li);
+  const renderNoteList = (notes) => {
+      noteList.innerHTML = '';
+      notes.forEach((note) => {
+          const li = document.createElement('li');
+          li.classList.add('list-group-item');
+          li.setAttribute('data-note', JSON.stringify(note));
+          li.innerHTML = `<span class="list-item-title">${note.title}</span>`;
+          const deleteBtn = document.createElement('i');
+          deleteBtn.classList.add('fas', 'fa-trash-alt', 'float-right', 'text-danger', 'delete-note');
+          deleteBtn.onclick = handleNoteDelete;
+          li.appendChild(deleteBtn);
+          li.onclick = handleNoteView;
+          noteList.appendChild(li);
       });
-
-      noteListItems.forEach((note) => noteList[0].append(note));
   };
 
-  const getAndRenderNotes = () => getNotes().then(renderNoteList);
+  const getAndRenderNotes = () => {
+      getNotes().then(notes => {
+          renderNoteList(notes);
+          if (!activeNote.id) {
+              renderActiveNote();
+          }
+      });
+  };
 
-  noteForm.addEventListener('input', handleRenderBtns);
   saveNoteBtn.addEventListener('click', handleNoteSave);
   newNoteBtn.addEventListener('click', handleNewNoteView);
-  clearBtn.addEventListener('click', renderActiveNote);
+  clearBtn.addEventListener('click', () => {
+      activeNote = {};
+      renderActiveNote();
+  });
+  noteForm.addEventListener('input', () => {
+      if (noteTitle.value.trim() && noteText.value.trim()) {
+          show(saveNoteBtn);
+          show(clearBtn);
+      } else {
+          hide(saveNoteBtn);
+          hide(clearBtn);
+      }
+  });
 
   getAndRenderNotes();
+});
+
+  // Rest of your code...
+  
+  saveNoteBtn.addEventListener('click', handleNoteSave);
+  console.log("Save button event listener attached"); // This should log when the DOM is fully loaded
 });
