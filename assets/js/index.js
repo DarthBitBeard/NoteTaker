@@ -1,7 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-  console.log("Document ready"); // Should appear in the console when the document is ready
-
-document.addEventListener('DOMContentLoaded', function() {
   let noteForm = document.querySelector('.note-form');
   let noteTitle = document.querySelector('.note-title');
   let noteText = document.querySelector('.note-textarea');
@@ -149,10 +146,4 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   getAndRenderNotes();
-});
-
-  // Rest of your code...
-  
-  saveNoteBtn.addEventListener('click', handleNoteSave);
-  console.log("Save button event listener attached"); // This should log when the DOM is fully loaded
 });
