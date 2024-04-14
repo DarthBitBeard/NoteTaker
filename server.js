@@ -53,13 +53,13 @@ app.delete('/api/notes/:id', (req, res) => {
             return;
         }
         let notes = JSON.parse(data);
-        notes = notes.filter(note => note.id !== noteId);
-        fs.writeFile(path.join(__dirname, 'db/db.json'), JSON.stringify(notes, null, 2), (err) => {
+        const filteredNotes = notes.filter(note => note.id !== noteId);
+        fs.writeFile(path.join(__dirname, 'db/db.json'), JSON.stringify(filteredNotes, null, 2), (err) => {
             if (err) {
                 res.status(500).json({ error: 'Error deleting note.' });
                 return;
             }
-            res.json({ message: 'Note deleted.' });
+            res.status(204).send(); // Correct response for successful delete with no content to return
         });
     });
 });
